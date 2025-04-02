@@ -8,50 +8,68 @@ public class BankAccount
     public string FullName { get; private set; }
     public string PassportNumber { get; private set; }
     public DateTime DateBirth { get; private set; }
-    public double Balance { get; set; }
+    public double Balance { get; private set; }
     public DateTime EndDate { get; private set; }
     public AccountStatus Status { get; private set; }
 
-    public enum AccountStatus { Открыт, Закрыт }
+    public enum AccountStatus
+    {
+        Открыт,
+        Закрыт
+    }
 
-    public BankAccount(string accountNumber, DateTime openDate, string fullName, string passportNumber, DateTime dateBirth, double balance, DateTime endDate)
+    public BankAccount(string accountNumber,
+        DateTime openDate,
+        string fullName,
+        string passportNumber,
+        DateTime dateBirth,
+        double balance,
+        DateTime endDate)
     {
         AccountNumber = accountNumber;
         OpenDate = openDate;
         FullName = fullName;
         PassportNumber = passportNumber;
         DateBirth = dateBirth;
+        Balance = balance;
         EndDate = endDate;
         Status = AccountStatus.Открыт;
-        Balance = balance;
     }
 
-    public void Deposit(double amount)
+    public bool Deposit(double amount)
     {
         if (amount <= 0)
-        {
-            MessageBox.Show("Сумма пополнения должна быть положительной.", "Ошибка", MessageBoxButton.OK);
-            return;
-        }
+            throw new ArgumentException("Сумма пополнения должна быть положительной", nameof(amount));
+
+        if (Status == AccountStatus.Закрыт)
+            throw new InvalidOperationException("Нельзя пополнить закрытый счет");
 
         Balance += amount;
+        return true;
     }
 
-    public void Withdraw(double amount)
+    public bool Withdraw(double amount)
     {
         if (amount <= 0)
-        {
-            MessageBox.Show("Сумма снятия должна быть положительной.", "Ошибка", MessageBoxButton.OK);
-            return;
-        }
+            throw new ArgumentException("Сумма снятия должна быть положительной", nameof(amount));
+
+        if (Status == AccountStatus.Закрыт)
+            throw new InvalidOperationException("Нельзя снять средства с закрытого счета");
 
         if (amount > Balance)
-        {
-            MessageBox.Show("Недостаточно средств на карте.", "Ошибка", MessageBoxButton.OK);
-            return;
-        }
+            return false;
 
         Balance -= amount;
+        return true;
+    }
+
+    public bool CloseAccount()
+    {
+        if (Balance != 0)
+            return false;
+
+        Status = AccountStatus.Закрыт;
+        return true;
     }
 
     public static string GenerateAccountNumber()
@@ -60,14 +78,6 @@ public class BankAccount
         int firstDigit = random.Next(1, 10);
         string otherDigits = string.Concat(Enumerable.Range(0, 11).Select(_ => random.Next(0, 10)));
         return firstDigit.ToString() + otherDigits;
-    }
-
-    public void CloseAccount()
-    {
-        if (Balance > 0)
-            MessageBox.Show("Нельзя закрыть счет с ненулевым балансом.");
-
-        Status = AccountStatus.Закрыт;
     }
 
     public string GetAccountInfo()
@@ -79,26 +89,5 @@ public class BankAccount
                $"Дата открытия счета: {OpenDate:dd-MM-yyyy}{Environment.NewLine}" +
                $"Номер счета: {AccountNumber}{Environment.NewLine}" +
                $"Статус счета: {Status}{Environment.NewLine}";
-    }
-
-    public static BankAccount operator +(BankAccount account, double amount)
-    {
-        if (amount < 0)
-            MessageBox.Show("Сумма пополнения должна быть положительной.");
-
-        account.Balance += amount;
-        return account;
-    }
-
-    public static BankAccount operator -(BankAccount account, double amount)
-    {
-        if (amount < 0)
-            MessageBox.Show("Сумма списания должна быть положительной.");
-
-        if (amount > account.Balance)
-            MessageBox.Show("Недостаточно средств на счете.");
-
-        account.Balance -= amount;
-        return account;
     }
 }

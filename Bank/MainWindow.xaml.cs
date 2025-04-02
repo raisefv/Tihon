@@ -1,14 +1,6 @@
-﻿using System.Text;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Bank.Classes;
 
 namespace Bank;
@@ -18,267 +10,293 @@ namespace Bank;
 /// </summary>
 public partial class MainWindow : Window
 {
-    private List<BankAccount> _BankAccount = new List<BankAccount>();
-
-    private List<Transaction> _deposit = new List<Transaction>();
-    private List<Transaction> _withdrawal = new List<Transaction>();
-    private List<Transaction> _transfer = new List<Transaction>();
+    private List<BankAccount> _bankAccounts = new List<BankAccount>();
+    private List<Transaction> _deposits = new List<Transaction>();
+    private List<Transaction> _withdrawals = new List<Transaction>();
+    private List<Transaction> _transfers = new List<Transaction>();
 
     public MainWindow()
     {
         InitializeComponent();
-        BirthDatePicker.DisplayDateEnd = DateTime.Now.AddYears(-14);
-        BirthDatePicker.DisplayDateStart = DateTime.Now.AddYears(-100);
+        ClientBirthDatePicker.DisplayDateEnd = DateTime.Now.AddYears(-14);
+        ClientBirthDatePicker.DisplayDateStart = DateTime.Now.AddYears(-100);
     }
 
-    private void OpenAccountButton(object sender, RoutedEventArgs e)
+    private void OnOpenAccountButtonClick(object sender, RoutedEventArgs e)
     {
-        string fullName = FullNameTextBox.Text;
-        string passport = PassportTextBox.Text;
-        DateTime? birthDate = BirthDatePicker.SelectedDate;
+        string fullName = ClientFullNameTextBox.Text;
+        string passport = ClientPassportTextBox.Text;
+        DateTime? birthDate = ClientBirthDatePicker.SelectedDate;
 
-        if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(passport) || birthDate == null)
+        if (string.IsNullOrWhiteSpace(fullName) || 
+            string.IsNullOrWhiteSpace(passport) || 
+            birthDate == null)
         {
-            MessageBox.Show("Пожалуйста, заполните все поля", "Ошибка", MessageBoxButton.OK);
+            ShowErrorMessage("Пожалуйста, заполните все поля");
             return;
         }
 
         if (fullName.Any(char.IsDigit))
         {
-            MessageBox.Show("Поле ФИО не должно содержать цифр", "Ошибка", MessageBoxButton.OK);
-            FullNameTextBox.Clear();
+            ShowErrorMessage("Поле ФИО не должно содержать цифр");
+            ClientFullNameTextBox.Clear();
             return;
         }
         
-        Regex passportRegex = new Regex(@"^\d{3}-\d{3}-\d{4}$");
+        var passportRegex = new Regex(@"^\d{6}-\d{4}$");
         if (!passportRegex.IsMatch(passport))
         {
-            MessageBox.Show("Некорректный формат паспорта. Используйте формат: xxx-xxx-xxxx (где x - цифра)", 
-                "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-            PassportTextBox.Clear();
-            PassportTextBox.Focus();
+            ShowErrorMessage("Некорректный формат паспорта. Используйте формат: xxxxxx-xxxx");
+            ClientPassportTextBox.Clear();
+            ClientPassportTextBox.Focus();
             return;
         }
 
-        var newBankAccount = new BankAccount(BankAccount.GenerateAccountNumber(), DateTime.Now, fullName, passport, birthDate.Value, 0, DateTime.Now.AddYears(10));
-        _BankAccount.Add(newBankAccount);
+        var newBankAccount = new BankAccount(
+            BankAccount.GenerateAccountNumber(), 
+            DateTime.Now, 
+            fullName, 
+            passport, 
+            birthDate.Value, 
+            0, 
+            DateTime.Now.AddYears(10));
+        
+        _bankAccounts.Add(newBankAccount);
+        UpdateClientSelectors();
 
-        UpdateUserComboBox();
-
-        FullNameTextBox.Clear();
-        PassportTextBox.Clear();
-        BirthDatePicker.SelectedDate = null;
-
-        MessageBox.Show("Счет успешно открыт!", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+        ClientFullNameTextBox.Clear();
+        ClientPassportTextBox.Clear();
+        ClientBirthDatePicker.SelectedDate = null;
+        
+        ShowSuccessMessage("Счет успешно открыт!");
     }
 
-    private void CloseAccountButton(object sender, RoutedEventArgs e)
+    private void OnCloseAccountButtonClick(object sender, RoutedEventArgs e)
     {
-        if (UserComboBox.SelectedItem == null)
+        if (FirstClientSelector.SelectedItem == null)
         {
-            MessageBox.Show("Выберите пользователя!", "Ошибка", MessageBoxButton.OK);
+            ShowErrorMessage("Выберите пользователя!");
             return;
         }
-
-        string selectedUserName = UserComboBox.SelectedItem.ToString();
-        var selectedAccount = _BankAccount.FirstOrDefault(acc => acc.FullName == selectedUserName);
+        
+        string selectedUserName = FirstClientSelector.SelectedItem.ToString();
+        var selectedAccount = _bankAccounts.FirstOrDefault(acc => acc.FullName == selectedUserName);
 
         if (selectedAccount == null)
         {
-            MessageBox.Show("Ошибка: Счет не найден!", "Ошибка", MessageBoxButton.OK);
+            ShowErrorMessage("Ошибка: Счет не найден!");
             return;
         }
 
         if (selectedAccount.Status == BankAccount.AccountStatus.Закрыт)
         {
-            MessageBox.Show("Счет уже закрыт.", "Ошибка", MessageBoxButton.OK);
+            ShowErrorMessage("Счет уже закрыт.");
             return;
         }
 
         selectedAccount.CloseAccount();
 
-        OutputUserTextBox.Text = "Выбранный пользователь:" + Environment.NewLine +
-                                selectedAccount.GetAccountInfo();
-
-        MessageBox.Show("Счет успешно закрыт.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+        FirstClientInfoTextBox.Text = $"Выбранный пользователь:{Environment.NewLine}{selectedAccount.GetAccountInfo()}";
+        ShowSuccessMessage("Счет успешно закрыт.");
     }
 
-    private void DepositButton(object sender, RoutedEventArgs e)
+    private void OnDepositButtonClick(object sender, RoutedEventArgs e)
     {
-        if (UserComboBox.SelectedItem == null)
+        if (FirstClientSelector.SelectedItem == null)
         {
-            MessageBox.Show("Сначала выберите пользователя и карту!", "Ошибка", MessageBoxButton.OK);
+            ShowErrorMessage("Сначала выберите пользователя!");
             return;
         }
 
-        if (!double.TryParse(AmountTextBox.Text, out double amount) || amount <= 0)
-        {
-            MessageBox.Show("Введите корректную сумму!", "Ошибка", MessageBoxButton.OK);
-            return;
-        }
-
-        string selectedUserName = UserComboBox.SelectedItem.ToString();
-        var selectedAccount = _BankAccount.FirstOrDefault(acc => acc.FullName == selectedUserName);
+        string selectedUserName = FirstClientSelector.SelectedItem.ToString();
+        var selectedAccount = _bankAccounts.FirstOrDefault(acc => acc.FullName == selectedUserName);
 
         if (selectedAccount == null)
         {
-            MessageBox.Show("Ошибка при поиске счета!", "Ошибка", MessageBoxButton.OK);
+            ShowErrorMessage("Ошибка при поиске счета!");
             return;
         }
-        
+
+        if (!double.TryParse(TransactionAmountTextBox.Text, out double amount))
+        {
+            ShowErrorMessage("Введите корректную сумму!");
+            return;
+        }
+
         selectedAccount.Deposit(amount);
 
         Transaction newTransaction = new Transaction(
-            accountNumber: selectedAccount.AccountNumber,
-            operation: Transaction.OperationType.Пополнение,
-            timestamp: DateTime.Now,
-            isSuccessful: true,
-            amount: amount,
-            getterAccountNumber: selectedAccount.AccountNumber,
-            senderAccountName: selectedUserName,
-            getterAccountName: selectedUserName);
+            selectedAccount.AccountNumber,
+            Transaction.OperationType.Пополнение,
+            DateTime.Now,
+            amount);
 
         AddTransaction(newTransaction);
 
-        OutputUserTextBox.Text = "Выбранный пользователь:" + Environment.NewLine +
-                                 selectedAccount.GetAccountInfo();
+        FirstClientInfoTextBox.Text = $"Выбранный пользователь: {Environment.NewLine}{selectedAccount.GetAccountInfo()}";
+        SecondClientInfoTextBox.Text = $"Выбранный пользователь: {Environment.NewLine}{selectedAccount.GetAccountInfo()}";
 
-        MessageBox.Show("Операция выполнена успешно!", "Успех", MessageBoxButton.OK);
+        ShowSuccessMessage("Операция выполнена успешно!");
 
-        AmountTextBox.Clear();
+        TransactionAmountTextBox.Clear();
     }
 
-    private void WithdrawButton(object sender, RoutedEventArgs e)
+    private void OnWithdrawButtonClick(object sender, RoutedEventArgs e)
     {
-        if (UserComboBox.SelectedItem == null)
+        try
         {
-            MessageBox.Show("Сначала выберите пользователя и карту!", "Ошибка", MessageBoxButton.OK);
-            return;
-        }
+            if (FirstClientSelector.SelectedItem == null)
+            {
+                ShowErrorMessage("Сначала выберите пользователя и карту!");
+                return;
+            }
 
-        if (!double.TryParse(AmountTextBox.Text, out double amount) || amount <= 0)
+            if (!double.TryParse(TransactionAmountTextBox.Text, out double amount) || amount <= 0)
+            {
+                ShowErrorMessage("Введите корректную сумму!");
+                return;
+            }
+
+            string selectedUserName = FirstClientSelector.SelectedItem.ToString();
+            var selectedAccount = _bankAccounts.FirstOrDefault(acc => acc.FullName == selectedUserName);
+
+            if (selectedAccount == null)
+            {
+                ShowErrorMessage("Ошибка при поиске счета!");
+                return;
+            }
+
+            if (!selectedAccount.Withdraw(amount))
+            {
+                ShowErrorMessage("Недостаточно средств на счете!");
+                return;
+            }
+
+            Transaction newTransaction = new Transaction(
+                selectedAccount.AccountNumber,
+                Transaction.OperationType.Снятие,
+                DateTime.Now,
+                amount);
+
+            AddTransaction(newTransaction);
+
+            FirstClientInfoTextBox.Text = $"Выбранный пользователь: {Environment.NewLine}{selectedAccount.GetAccountInfo()}";
+            SecondClientInfoTextBox.Text = $"Выбранный пользователь: {Environment.NewLine}{selectedAccount.GetAccountInfo()}";
+            
+            ShowSuccessMessage("Операция выполнена успешно!");
+            TransactionAmountTextBox.Clear();
+        }
+        catch (Exception ex)
         {
-            MessageBox.Show("Введите корректную сумму!", "Ошибка", MessageBoxButton.OK);
-            return;
+            ShowErrorMessage(ex.Message);
         }
-
-        string selectedUserName = UserComboBox.SelectedItem.ToString();
-        var selectedAccount = _BankAccount.FirstOrDefault(acc => acc.FullName == selectedUserName);
-
-        if (selectedAccount == null)
-        {
-            MessageBox.Show("Ошибка при поиске счета!", "Ошибка", MessageBoxButton.OK);
-            return;
-        }
-
-        selectedAccount.Withdraw(amount);
-
-        Transaction newTransaction = new Transaction(
-            accountNumber: selectedAccount.AccountNumber,
-            operation: Transaction.OperationType.Снятие,
-            timestamp: DateTime.Now,
-            isSuccessful: true,
-            amount: amount,
-            getterAccountNumber: "",
-            senderAccountName: selectedUserName,
-            getterAccountName: "");
-
-        AddTransaction(newTransaction);
-
-        OutputUserTextBox.Text = "Выбранный пользователь:" + Environment.NewLine +
-                                 selectedAccount.GetAccountInfo();
-
-        MessageBox.Show("Операция выполнена успешно!", "Успех", MessageBoxButton.OK);
-
-        AmountTextBox.Clear();
     }
 
-    private void TransferButton(object sender, RoutedEventArgs e)
+    private void OnTransferButtonClick(object sender, RoutedEventArgs e)
     {
-        if (UserComboBox.SelectedItem == null || UserComboBox2.SelectedItem == null)
+        try
         {
-            MessageBox.Show("Выберите обоих пользователей!", "Ошибка", MessageBoxButton.OK);
-            return;
-        }
+            if (FirstClientSelector.SelectedItem == null || SecondClientSelector.SelectedItem == null)
+            {
+                ShowErrorMessage("Выберите обоих пользователей!");
+                return;
+            }
 
-        if (!double.TryParse(AmountTextBox.Text, out double amount) || amount <= 0)
+            string senderName = FirstClientSelector.SelectedItem.ToString();
+            string receiverName = SecondClientSelector.SelectedItem.ToString();
+            
+            if (senderName == receiverName)
+            {
+                ShowErrorMessage("Нельзя переводить самому себе!");
+                return;
+            }
+            
+            if (!double.TryParse(TransactionAmountTextBox.Text, out double amount) || amount <= 0)
+            {
+                ShowErrorMessage("Введите корректную положительную сумму!");
+                return;
+            }
+            
+            var senderAccount = _bankAccounts.FirstOrDefault(a => a.FullName == senderName);
+            var receiverAccount = _bankAccounts.FirstOrDefault(a => a.FullName == receiverName);
+
+            if (senderAccount == null || receiverAccount == null)
+            {
+                ShowErrorMessage("Один из счетов не найден!");
+                return;
+            }
+            
+            if (senderAccount.Status == BankAccount.AccountStatus.Закрыт || 
+                receiverAccount.Status == BankAccount.AccountStatus.Закрыт)
+            {
+                ShowErrorMessage("Один из счетов закрыт!");
+                return;
+            }
+            
+            if (!senderAccount.Withdraw(amount))
+            {
+                ShowErrorMessage("Недостаточно средств для перевода!");
+                return;
+            }
+
+            if (!receiverAccount.Deposit(amount))
+            {
+                senderAccount.Deposit(amount);
+                ShowErrorMessage("Ошибка при зачислении средств!");
+                return;
+            }
+            
+            var transaction = new Transaction(
+                senderAccount.AccountNumber,
+                Transaction.OperationType.Перевод,
+                DateTime.Now,
+                amount,
+                receiverAccount.AccountNumber,
+                senderName,
+                receiverName);
+
+            _transfers.Add(transaction);
+            
+            FirstClientInfoTextBox.Text = $"Выбранный пользователь: {Environment.NewLine}{senderAccount.GetAccountInfo()}";
+            SecondClientInfoTextBox.Text = $"Выбранный пользователь: {Environment.NewLine}{receiverAccount.GetAccountInfo()}";
+
+            ShowSuccessMessage("Перевод выполнен успешно!");
+            TransactionAmountTextBox.Clear();
+        }
+        catch (Exception ex)
         {
-            MessageBox.Show("Введите корректную сумму!", "Ошибка", MessageBoxButton.OK);
-            return;
+            ShowErrorMessage($"Ошибка перевода: {ex.Message}");
         }
-
-        string senderUserName = UserComboBox.SelectedItem.ToString();
-        string receiverUserName = UserComboBox2.SelectedItem.ToString();
-
-        if (senderUserName == receiverUserName)
-        {
-            MessageBox.Show("Нельзя перевести средства самому себе!", "Ошибка", MessageBoxButton.OK);
-            return;
-        }
-
-        var senderAccount = _BankAccount.FirstOrDefault(acc => acc.FullName == senderUserName);
-        var receiverAccount = _BankAccount.FirstOrDefault(acc => acc.FullName == receiverUserName);
-
-        if (senderAccount == null || receiverAccount == null)
-        {
-            MessageBox.Show("Оба пользователя должны иметь открытые счета!", "Ошибка", MessageBoxButton.OK);
-            return;
-        }
-        
-        senderAccount.Withdraw(amount);
-        receiverAccount.Deposit(amount);
-
-        Transaction newTransaction = new Transaction(
-            accountNumber: senderAccount.AccountNumber,
-            operation: Transaction.OperationType.Перевод,
-            timestamp: DateTime.Now,
-            isSuccessful: true,
-            amount: amount,
-            getterAccountNumber: receiverAccount.AccountNumber,
-            senderAccountName: senderUserName,
-            getterAccountName: receiverUserName
-        );
-
-        AddTransaction(newTransaction);
-
-        OutputUserTextBox.Text = "Выбранный пользователь:" + Environment.NewLine +
-                                 senderAccount.GetAccountInfo();
-        OutputUserTextBox2.Text = "Выбранный пользователь:" + Environment.NewLine +
-                                  receiverAccount.GetAccountInfo();
-
-        MessageBox.Show("Перевод выполнен успешно!", "Успех", MessageBoxButton.OK);
-
-        AmountTextBox.Clear();
     }
-
-    private void TransactionTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    
+    private void OnTransactionTypeChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (UserComboBox == null || UserComboBox.SelectedItem == null || TransactionTypeComboBox == null || TransactionTypeComboBox.SelectedItem == null)
+        if (FirstClientSelector == null || FirstClientSelector.SelectedItem == null || TransactionTypeSelector == null || TransactionTypeSelector.SelectedItem == null)
         {
             return;
         }
 
-        if (UserComboBox.SelectedItem is string selectedUserName)
+        if (FirstClientSelector.SelectedItem is string selectedUserName)
         {
-            var bankAccount = _BankAccount.FirstOrDefault(acc => acc.FullName == selectedUserName);
+            var bankAccount = _bankAccounts.FirstOrDefault(acc => acc.FullName == selectedUserName);
             if (bankAccount != null)
             {
                 var Transaction = GetFilteredTransaction(bankAccount);
-                UpdateTransactionOutput(bankAccount, OutputTransactionTextBox, Transaction);
+                UpdateTransactionOutput(bankAccount, TransactionLogTextBox, Transaction);
             }
         }
     }
 
     private List<Transaction> GetFilteredTransaction(BankAccount account)
     {
-        if (TransactionTypeComboBox == null || TransactionTypeComboBox.SelectedItem == null)
+        if (TransactionTypeSelector == null || TransactionTypeSelector.SelectedItem == null)
         {
             return new List<Transaction>();
         }
 
-        var selectedType = (TransactionTypeComboBox.SelectedItem as ComboBoxItem)?.Content.ToString();
+        var selectedType = (TransactionTypeSelector.SelectedItem as ComboBoxItem)?.Content.ToString();
 
-        var allTransaction = _deposit.Concat(_withdrawal).Concat(_transfer).ToList();
+        var allTransaction = _deposits.Concat(_withdrawals).Concat(_transfers).ToList();
 
         allTransaction = allTransaction.Where(t => t.AccountNumber == account.AccountNumber).ToList();
 
@@ -310,36 +328,36 @@ public partial class MainWindow : Window
         switch (transaction.Operation)
         {
             case Transaction.OperationType.Пополнение:
-                _deposit.Add(transaction);
+                _deposits.Add(transaction);
                 break;
             case Transaction.OperationType.Снятие:
-                _withdrawal.Add(transaction);
+                _withdrawals.Add(transaction);
                 break;
             case Transaction.OperationType.Перевод:
-                _transfer.Add(transaction);
+                _transfers.Add(transaction);
                 break;
             default:
                 throw new InvalidOperationException("Неизвестный тип транзакции.");
         }
 
-        var bankAccount = _BankAccount.FirstOrDefault(acc => acc.AccountNumber == transaction.AccountNumber);
+        var bankAccount = _bankAccounts.FirstOrDefault(acc => acc.AccountNumber == transaction.AccountNumber);
         if (bankAccount != null)
         {
-            UpdateTransactionOutput(bankAccount, OutputTransactionTextBox, GetFilteredTransaction(bankAccount));
+            UpdateTransactionOutput(bankAccount, TransactionLogTextBox, GetFilteredTransaction(bankAccount));
         }
     }
 
-    private void UpdateTransactionOutput(BankAccount account, TextBox outputTransactionTextBox, List<Transaction> transactionList)
+    private void UpdateTransactionOutput(BankAccount account, TextBox TransactionLogTextBox, List<Transaction> transactionList)
     {
         if (account == null || transactionList == null)
         {
-            outputTransactionTextBox.Text = "Нет данных о транзакциях.";
+            TransactionLogTextBox.Text = "Нет данных о транзакциях.";
             return;
         }
 
         if (transactionList.Count == 0)
         {
-            outputTransactionTextBox.Text = "Нет совершенных транзакций.";
+            TransactionLogTextBox.Text = "Нет совершенных транзакций.";
             return;
         }
 
@@ -361,27 +379,25 @@ public partial class MainWindow : Window
 
         Dispatcher.Invoke(() =>
         {
-            outputTransactionTextBox.Text = output;
+            TransactionLogTextBox.Text = output;
         });
     }
 
-    private void UserComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void OnFirstClientSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        UpdateSelectedUser(UserComboBox, OutputUserTextBox);
-        UpdateSelectedUser(UserComboBox2, OutputUserTextBox2);
+        UpdateSelectedClient(FirstClientSelector, FirstClientInfoTextBox);
     }
 
-    private void UserComboBox2_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void OnSecondClientSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        UpdateSelectedUser(UserComboBox, OutputUserTextBox);
-        UpdateSelectedUser(UserComboBox2, OutputUserTextBox2);
+        UpdateSelectedClient(SecondClientSelector, SecondClientInfoTextBox);
     }
 
-    private void UpdateSelectedUser(ComboBox userComboBox, TextBox outputTextBox)
+    private void UpdateSelectedClient(ComboBox ClientSelector, TextBox outputTextBox)
     {
-        if (userComboBox?.SelectedItem is string selectedUserName)
+        if (ClientSelector?.SelectedItem is string selectedUserName)
         {
-            var selectedUser = _BankAccount.FirstOrDefault(user => user.FullName == selectedUserName);
+            var selectedUser = _bankAccounts.FirstOrDefault(user => user.FullName == selectedUserName);
 
             if (selectedUser != null)
             {
@@ -390,26 +406,36 @@ public partial class MainWindow : Window
             }
             else
             {
-                outputTextBox.Text = "Пользователь не найден или у него нет счета.";
+                outputTextBox.Text = "Пользователь не найден.";
             }
         }
     }
 
-    private void UpdateUserComboBox()
+    private void UpdateClientSelectors()
     {
-        UserComboBox.Items.Clear();
-        UserComboBox2.Items.Clear();
+        FirstClientSelector.Items.Clear();
+        SecondClientSelector.Items.Clear();
 
-        foreach (var user in _BankAccount)
+        foreach (var user in _bankAccounts)
         {
-            UserComboBox.Items.Add(user.FullName);
-            UserComboBox2.Items.Add(user.FullName);
+            FirstClientSelector.Items.Add(user.FullName);
+            SecondClientSelector.Items.Add(user.FullName);
         }
 
-        if (_BankAccount.Any())
+        if (_bankAccounts.Any())
         {
-            UserComboBox.SelectedIndex = 0;
-            UserComboBox2.SelectedIndex = 0;
+            FirstClientSelector.SelectedIndex = 0;
+            SecondClientSelector.SelectedIndex = 0;
         }
+    }
+    
+    private void ShowErrorMessage(string message)
+    {
+        MessageBox.Show(message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+    }
+
+    private void ShowSuccessMessage(string message)
+    {
+        MessageBox.Show(message, "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 }

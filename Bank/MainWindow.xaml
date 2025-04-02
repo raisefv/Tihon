@@ -22,45 +22,44 @@
             <StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                     <TextBlock Text="ФИО:" Width="100" VerticalAlignment="Center"/>
-                    <TextBox Name="FullNameTextBox" Width="200"/>
+                    <TextBox x:Name="ClientFullNameTextBox" Width="200"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                     <TextBlock Text="Паспорт:" Width="100" VerticalAlignment="Center"/>
-                    <TextBox Name="PassportTextBox" Width="200"/>
+                    <TextBox x:Name="ClientPassportTextBox" Width="200"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                     <TextBlock Text="Дата рождения:" Width="100" VerticalAlignment="Center"/>
-                    <DatePicker Name="BirthDatePicker" Width="200"/>
+                    <DatePicker x:Name="ClientBirthDatePicker" Width="200"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <Button Content="Открыть счет" Click="OpenAccountButton" Width="120" Margin="0,0,10,0"/>
-                    <Button Content="Закрыть счет" Click="CloseAccountButton" Width="120"/>
+                    <Button Content="Открыть счет" Click="OnOpenAccountButtonClick" Width="120" Margin="0,0,10,0"/>
+                    <Button Content="Закрыть счет" Click="OnCloseAccountButtonClick" Width="120"/>
                 </StackPanel>
             </StackPanel>
         </GroupBox>
 
         <!-- Транзакции и операции с счетом -->
         <GroupBox Grid.Row="0" Grid.Column="1" Header="Транзакции" Padding="10" Margin="0,0,0,10">
-            <!-- Транзакции -->
             <StackPanel>
-                <ComboBox Name="TransactionTypeComboBox" SelectionChanged="TransactionTypeComboBox_SelectionChanged" Margin="0,0,0,10"
+                <ComboBox x:Name="TransactionTypeSelector" SelectionChanged="OnTransactionTypeChanged" Margin="0,0,0,10"
                           SelectedIndex="0">
                     <ComboBoxItem Content="Пополнение"/>
                     <ComboBoxItem Content="Снятие"/>
                     <ComboBoxItem Content="Перевод"/>
                 </ComboBox>
-                <TextBox Name="OutputTransactionTextBox" IsReadOnly="True" Height="120" TextWrapping="Wrap"/>
+                <TextBox x:Name="TransactionLogTextBox" IsReadOnly="True" Height="120" TextWrapping="Wrap"/>
                 
                 <!-- Операции с счетом -->
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                     <TextBlock Text="Сумма:" Width="60" VerticalAlignment="Center"/>
-                    <TextBox Name="AmountTextBox" Width="150"/>
+                    <TextBox x:Name="TransactionAmountTextBox" Width="150"/>
                 </StackPanel>
                 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <Button Content="Пополнить" Click="DepositButton" Width="100" Margin="0,0,5,0"/>
-                    <Button Content="Снять" Click="WithdrawButton" Width="100" Margin="0,0,5,0"/>
-                    <Button Content="Перевести" Click="TransferButton" Width="100"/>
+                    <Button Content="Пополнить" Click="OnDepositButtonClick" Width="100" Margin="0,0,5,0"/>
+                    <Button Content="Снять" Click="OnWithdrawButtonClick" Width="100" Margin="0,0,5,0"/>
+                    <Button Content="Перевести" Click="OnTransferButtonClick" Width="100"/>
                 </StackPanel>
             </StackPanel>
         </GroupBox>
@@ -76,22 +75,22 @@
                 <!-- Пользователь 1 -->
                 <StackPanel Grid.Column="0" Margin="0,0,5,0">
                     <TextBlock Text="Пользователь 1" Margin="0,0,0,5"/>
-                    <ComboBox Name="UserComboBox" SelectionChanged="UserComboBox_SelectionChanged" 
+                    <ComboBox x:Name="FirstClientSelector" SelectionChanged="OnFirstClientSelectionChanged" 
                               Width="200" Margin="0,0,0,10">
                         <ComboBoxItem Content="User 1" IsSelected="True"/>
                     </ComboBox>
-                    <TextBox Name="OutputUserTextBox" IsReadOnly="True" 
+                    <TextBox x:Name="FirstClientInfoTextBox" IsReadOnly="True" 
                              TextWrapping="Wrap" Height="180" VerticalScrollBarVisibility="Auto"/>
                 </StackPanel>
                 
                 <!-- Пользователь 2 -->
                 <StackPanel Grid.Column="1" Margin="5,0,0,0">
                     <TextBlock Text="Пользователь 2" Margin="0,0,0,5"/>
-                    <ComboBox Name="UserComboBox2" SelectionChanged="UserComboBox2_SelectionChanged" 
+                    <ComboBox x:Name="SecondClientSelector" SelectionChanged="OnSecondClientSelectionChanged" 
                               Width="200" Margin="0,0,0,10">
                         <ComboBoxItem Content="User 2" IsSelected="True"/>
                     </ComboBox>
-                    <TextBox Name="OutputUserTextBox2" IsReadOnly="True" 
+                    <TextBox x:Name="SecondClientInfoTextBox" IsReadOnly="True" 
                              TextWrapping="Wrap" Height="180" VerticalScrollBarVisibility="Auto"/>
                 </StackPanel>
             </Grid>

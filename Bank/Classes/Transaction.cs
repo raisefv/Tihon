@@ -1,37 +1,56 @@
-﻿namespace Bank.Classes;
+﻿using System.Text;
+
+namespace Bank.Classes;
 
 public class Transaction
 {
-    public string AccountNumber { get; set; }
-    public OperationType Operation { get; set; }
-    public DateTime Timestamp { get; set; }
-    public bool IsSuccessful { get; set; }
-    public double Amount { get; set; }
-    public enum OperationType { Снятие, Пополнение, Перевод }
-    public string GetterAccountNumber { get; set; }
-    public string GetterAccountName { get; set; }
-    public string SenderAccountName { get; set; }
+    public string AccountNumber { get; }
+    public OperationType Operation { get; }
+    public DateTime Timestamp { get; }
+    public double Amount { get; }
+    public string GetterAccountNumber { get; }
+    public string GetterAccountName { get; }
+    public string SenderAccountName { get; }
 
-    public Transaction(string accountNumber, OperationType operation, DateTime timestamp, bool isSuccessful, double amount, string getterAccountNumber, string senderAccountName, string getterAccountName)
+    public enum OperationType { Снятие, Пополнение, Перевод }
+
+    public Transaction(string accountNumber,
+        OperationType operation,
+        DateTime timestamp,
+        double amount,
+        string getterAccountNumber = null,
+        string senderAccountName = null,
+        string getterAccountName = null)
     {
+        if (string.IsNullOrWhiteSpace(accountNumber))
+            throw new ArgumentException("Номер счета обязателен", nameof(accountNumber));
+
+        if (amount <= 0)
+            throw new ArgumentException("Сумма должна быть положительной", nameof(amount));
+
         AccountNumber = accountNumber;
         Operation = operation;
         Timestamp = timestamp;
-        IsSuccessful = isSuccessful;
         Amount = amount;
         GetterAccountNumber = getterAccountNumber;
-        GetterAccountName = getterAccountName;
         SenderAccountName = senderAccountName;
+        GetterAccountName = getterAccountName;
     }
 
     public string OutputTransaction()
     {
-        string transactionInfo = $"Операция: {this.Operation}{Environment.NewLine}" +
-                                 $"Счет: {this.AccountNumber}{Environment.NewLine}" +
-                                 $"Сумма: {this.Amount}{Environment.NewLine}" +
-                                 $"Результат транзакции: {(this.IsSuccessful ? "успешно" : "неудача")}{Environment.NewLine}" +
-                                 $"Дата: {this.Timestamp.ToString("dd-MM-yyyy HH:mm:ss")}{Environment.NewLine}";
+        var sb = new StringBuilder();
+        sb.AppendLine($"Операция: {Operation}");
+        sb.AppendLine($"Счет: {AccountNumber}");
+        sb.AppendLine($"Сумма: {Amount}");
+        sb.AppendLine($"Дата: {Timestamp:dd.MM.yyyy HH:mm:ss}");
 
-        return transactionInfo;
+        if (Operation == OperationType.Перевод)
+        {
+            sb.AppendLine($"Получатель: {GetterAccountName}");
+            sb.AppendLine($"Счет получателя: {GetterAccountNumber}");
+        }
+
+        return sb.ToString();
     }
 }
