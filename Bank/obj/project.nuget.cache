@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "fO+h8cQE68M=",
+  "dgSpecHash": "VJyV2UsjwTU=",
   "success": true,
   "projectFilePath": "C:\\dev\\cs\\tihon cs\\Bank\\Bank\\Bank.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\1\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512"
+  ],
   "logs": []
 }

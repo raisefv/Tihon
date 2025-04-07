@@ -19,3 +19,6 @@ C:\dev\cs\tihon cs\Bank\Bank\obj\Debug\net9.0-windows\Bank.pdb
 C:\dev\cs\tihon cs\Bank\Bank\obj\Debug\net9.0-windows\Bank.genruntimeconfig.cache
 C:\dev\cs\tihon cs\Bank\Bank\obj\Debug\net9.0-windows\ref\Bank.dll
 C:\dev\cs\tihon cs\Bank\Bank\obj\Debug\net9.0-windows\Bank.sourcelink.json
+C:\dev\cs\tihon cs\Bank\Bank\obj\Debug\net9.0-windows\Bank.csproj.AssemblyReference.cache
+C:\dev\cs\tihon cs\Bank\Bank\bin\Debug\net9.0-windows\Newtonsoft.Json.dll
+C:\dev\cs\tihon cs\Bank\Bank\obj\Debug\net9.0-windows\Bank.csproj.Up2Date

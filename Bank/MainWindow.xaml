@@ -32,9 +32,13 @@
                     <TextBlock Text="Дата рождения:" Width="100" VerticalAlignment="Center"/>
                     <DatePicker x:Name="ClientBirthDatePicker" Width="200"/>
                 </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,15">
+                    <Button Content="Открыть счет" Click="OnOpenAccountButtonClick" Width="150" Margin="0,0,10,0"/>
+                    <Button Content="Закрыть счет" Click="OnCloseAccountButtonClick" Width="150"/>
+                </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <Button Content="Открыть счет" Click="OnOpenAccountButtonClick" Width="120" Margin="0,0,10,0"/>
-                    <Button Content="Закрыть счет" Click="OnCloseAccountButtonClick" Width="120"/>
+                    <Button Content="Загрузить пользователей" Click="OnLoadClientsButtonClick" Width="150" Margin="0,0,10,0"/>
+                    <Button Content="Сохранить пользователей" Click="OnSaveClientsButtonClick" Width="150"/>
                 </StackPanel>
             </StackPanel>
         </GroupBox>
@@ -51,7 +55,7 @@
                 <TextBox x:Name="TransactionLogTextBox" IsReadOnly="True" Height="120" TextWrapping="Wrap"/>
                 
                 <!-- Операции с счетом -->
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
                     <TextBlock Text="Сумма:" Width="60" VerticalAlignment="Center"/>
                     <TextBox x:Name="TransactionAmountTextBox" Width="150"/>
                 </StackPanel>

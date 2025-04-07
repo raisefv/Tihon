@@ -1,7 +1,9 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using Bank.Classes;
+using Newtonsoft.Json;
 
 namespace Bank;
 
@@ -426,6 +428,38 @@ public partial class MainWindow : Window
         {
             FirstClientSelector.SelectedIndex = 0;
             SecondClientSelector.SelectedIndex = 0;
+        }
+    }
+    
+    private const string ClientsFile = "ClientsList.json";
+
+    private void OnSaveClientsButtonClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            string json = JsonConvert.SerializeObject(_bankAccounts, Newtonsoft.Json.Formatting.Indented);
+            File.WriteAllText(ClientsFile, json);
+            ShowSuccessMessage("Данные успешно записаны в JSON!");
+        }
+        catch
+        {
+            ShowErrorMessage("Ошибка сохранения!");
+        }
+    }
+
+    private void OnLoadClientsButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (File.Exists(ClientsFile))
+        {
+            string json = File.ReadAllText(ClientsFile);
+            _bankAccounts = JsonConvert.DeserializeObject<List<BankAccount>>(json);
+            ShowSuccessMessage("Данные успешно считаны из JSON!");
+
+            UpdateClientSelectors();
+        }
+        else
+        {
+            ShowErrorMessage("Ошибка при загрузке данных");
         }
     }
     
